@@ -6,11 +6,21 @@
 
 This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys. Supported input versions are `MAJOR.MINOR.PATCH` with optional `-SNAPSHOT`; version bump returns release version without SNAPSHOT.
 
-## Planned functions (NOT included yet)
+## Version-management additions (source committed; tests pending)
+
+- `MavenVersion.validate(version)` — strict MAJOR.MINOR.PATCH[-SNAPSHOT] parsing.
+- `MavenVersion.next(current, type, snapshot)` — calculate next version without I/O.
+- `ReleasePolicy.releaseBranch(branch)` — currently requires `main`.
+- `ReleasePolicy.tag(version)` — `vX.Y.Z`, rejecting SNAPSHOT releases.
+- `updateMavenVersion(expectedVersion: '1.2.3-SNAPSHOT', newVersion: '1.2.4-SNAPSHOT')` — requires a Jenkins workspace containing a root `pom.xml`, Maven on PATH, and access to pinned Maven plugins. Verifies version before and after change. Does not commit, tag, push or deploy; multi-module projects require additional safeguards and tests.
+
+**Verification:** Unit tests and Jenkins runtime execution for these new functions are pending. Never interpret source commits as passing tests.
+
+## Remaining planned functions
 
 | Public step | Planned contract |
 | --- | --- |
-| `updateMavenVersion` | Read expected current version, update Maven root version safely and verify results |
+
 | `commitVersion` | Stage allowlisted files only, validate clean/dirty state, create local commit |
 | `createReleaseTag` | Verify approved branch/release version and create signed or annotated tag under policy |
 | `mavenBuild` | Verify Maven tool and run controlled goals; publish unit-test results |
