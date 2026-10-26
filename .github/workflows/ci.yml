@@ -16,8 +16,12 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Gradle tests (Java 21)
+    name: Gradle tests (Java ${{ matrix.java }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '25']
     timeout-minutes: 15
     steps:
       - name: Checkout source
@@ -29,7 +33,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: ${{ matrix.java }}
 
       - name: Configure Gradle and validate wrapper
         uses: gradle/actions/setup-gradle@v4
@@ -43,7 +47,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: gradle-test-reports
+          name: gradle-test-reports-java-${{ matrix.java }}
           path: |
             build/reports/tests/test/
             build/test-results/test/
