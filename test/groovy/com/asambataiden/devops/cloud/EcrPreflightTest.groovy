@@ -24,7 +24,9 @@ class EcrPreflightTest {
         ])
         def step = new GroovyShell(EcrPreflightTest.class.classLoader, binding)
             .parse(new File(System.getProperty('user.dir'), 'vars/ecrPush.groovy'))
-        return [result: step.call(inputs), script: scripts.single(), env: variables]
+        def result = step.call(inputs)
+        assertEquals(1, scripts.size())
+        return [result: result, script: scripts[0], env: variables]
     }
 
     private static Map valid() {
