@@ -6,7 +6,7 @@ Validate Jenkins Shared Library Groovy source and mocked Jenkins pipeline tests 
 
 ## Implemented workflow
 
-- `.github/workflows/ci.yml`: JDK 21 (Temurin), Gradle 9.0.0 wrapper, `./gradlew clean test --no-daemon --console=plain`.
+- `.github/workflows/ci.yml`: Temurin JDK 21 and 25 test matrix, Gradle 9.1.0 wrapper, `./gradlew clean test --no-daemon --console=plain`.
 - GitHub Actions execution status is **not yet verified**. Successful local runs do not prove GitHub runners will pass.
 - Read-only GitHub token; no cloud credentials; failure test report artifacts.
 - No automatic releases, Git pushes, Docker image pushes, or EKS changes.
@@ -16,7 +16,7 @@ Validate Jenkins Shared Library Groovy source and mocked Jenkins pipeline tests 
 After the workflow's first green run, configure a branch ruleset for `main`:
 
 1. Require a pull request before merging.
-2. Require the `Gradle tests (Java 21)` check from this workflow.
+2. Require both `Gradle tests (Java 21)` and `Gradle tests (Java 25)` checks from this workflow after confirming their names and success in Actions.
 3. Prevent force pushes and branch deletion.
 4. Require at least one reviewer where supported and appropriate; prevent bypass for administrators where supported.
 5. Keep GitHub Actions permissions at least privilege.
@@ -39,5 +39,7 @@ git pull --ff-only origin feat/library-foundation
 ./gradlew clean test --no-daemon --console=plain
 git status --short
 ```
+
+To run locally with Java 25, install a trusted JDK 25, set JAVA_HOME to that installation, verify `java -version` and `./gradlew --version`, then run `./gradlew clean test --no-daemon --console=plain`. Keep Jenkins runtime upgrades separate from library CI upgrades; Jenkins LTS 2.541.1 or newer supports Java 25. Before upgrading Jenkins controller/agents, check plugin compatibility and test a backup.
 
 Check GitHub **Actions → Shared Library CI** for a successful run on the feature branch. No claim of green GitHub CI is made before seeing that run.
