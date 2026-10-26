@@ -23,6 +23,13 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 - `GitConfig` validates an allowlist of version files (currently root `pom.xml`) and Git inputs. `ReleasePolicy` rejects `-SNAPSHOT` tags.
 - Jenkins source/runtime tests of the `vars/` wrappers, remote tag checks, and approval gates are **not yet implemented or verified**. Neither function should be run from an untrusted pull request or in production until those safeguards and integration tests exist.
 
+## Maven CI steps (source committed; runtime validation pending)
+
+- `mavenVerify()`: requires root `pom.xml`; runs `mvn -B -ntp verify` and publishes Surefire/Failsafe XML reports using `junit` even if Maven exits unsuccessfully. Missing test reports fail verification.
+- `mavenBuild()`: requires root `pom.xml`; runs `mvn -B -ntp package` and fingerprints/archives the root JAR. `skipTests: true` is supported as an explicit option, intended only after a verified test stage.
+- Maven is assumed available on the selected Jenkins agent. Jenkins environment integration has not yet been validated. Multi-module build layouts need additional handling.
+- Both functions have mocked test cases; actual execution and test results are **pending**.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
@@ -30,7 +37,7 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 
 | `commitVersion` | Stage allowlisted files only, validate clean/dirty state, create local commit |
 | `createReleaseTag` | Verify approved branch/release version and create signed or annotated tag under policy |
-| `mavenBuild` | Verify Maven tool and run controlled goals; publish unit-test results |
+
 | `dockerBuild` | Validate image ref and build context; immutable tag strategy |
 | `ecrPush` | Credential-scoped AWS auth; push and resolve digest |
 | `eksDeploy` | Deploy immutable image digest; assert rollout health |
