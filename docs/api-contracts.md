@@ -49,7 +49,13 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 - `ecrPush(accountId: '123456789012', region: 'eu-north-1', repository: 'team/app', tag: 'git-abcdef')`: obtains an ECR login token from the Jenkins agent's AWS identity; Docker authentication uses `--password-stdin` and temporary `DOCKER_CONFIG`, cleaned up on exit. **The target full ECR image must already be built/tagged locally**. The step does not create or retag an image.
 - `ecrImageDigest(...)`: executes `aws ecr describe-images` for the target image tag, validates its `sha256` digest and returns a digest-pinned reference. Requires `ecr:DescribeImages` authorization.
 - Scope AWS identity to the desired repository and account, preferably an agent IAM role / short-lived credentials. Additional ECR permissions normally include `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload`, `ecr:PutImage`. AWS account, region, and repository must be the intended deployment destination.
-- The current steps do **not** validate that the Jenkins AWS identity belongs to the supplied account, enforce ECR tag immutability, or automatically build/retag images. Integration checks must cover those controls before use for actual publishing.
+- The hardened ecrPush step now verifies the AWS caller account via STS, requires ECR repository imageTagMutability=IMMUTABLE, checks the exact local Docker image exists, and refuses a previously used tag before authenticating/pushing. ECR server-side immutability is required to prevent publication races. The current step still does **not** automatically build/retag images or guarantee consistency with the image built in an earlier stage. End-to-end integration verification is pending.
+
+### ECR publishing integration readiness
+
+Before attempting a real publish, use a disposable test repository with immutable image tags, scoped short-lived AWS credentials, AWS CLI v2 and Docker on the Jenkins agent. Verify expected-account enforcement, repository policy, local image preflight, existing tag refusal, successful push, temporary credentials cleanup and digest resolution. Set Jenkins concurrency controls for release pipelines as an additional guard, not as a replacement for registry immutability. After pushing, deploy only a digest-pinned reference. Never use untrusted pull-request code with cloud publishing credentials.
+
+The new `EcrPreflightTest` checks preflight script content, not live AWS error responses; these tests require local verification.
 
 ## Remaining planned functions
 
