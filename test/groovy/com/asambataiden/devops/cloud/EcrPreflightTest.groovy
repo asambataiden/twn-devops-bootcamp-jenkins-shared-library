@@ -17,7 +17,7 @@ class EcrPreflightTest {
         def binding = new Binding([
             error: { String message -> throw new IllegalStateException(message) },
             withEnv: { List<String> env, Closure body ->
-                variables.addAll(env)
+                variables.addAll(env.collect { it.toString() })
                 body.call()
             },
             sh: { Map cmd -> scripts.add(cmd.script) }
