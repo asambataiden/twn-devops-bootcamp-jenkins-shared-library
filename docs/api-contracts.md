@@ -16,6 +16,13 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 
 **Verification:** Unit tests and Jenkins runtime execution for these new functions are pending. Never interpret source commits as passing tests.
 
+## Git release operations (code committed, Jenkins integration pending)
+
+- `commitVersion(branch: 'main', version: '1.2.3', authorName: 'Release Bot', authorEmail: 'ci@example.invalid')`: checks checked-out branch, allows a change to root `pom.xml` only, creates a **local commit** and returns its SHA. Does not push. Caller must authenticate and authorize any later push separately.
+- `createReleaseTag(branch: 'main', version: '1.2.3', authorName: 'Release Bot', authorEmail: 'ci@example.invalid')`: checks clean attached `main`, rejects duplicate local tags, creates annotated **local** `v1.2.3` tag. Does not push, and does not check the remote for an existing tag.
+- `GitConfig` validates an allowlist of version files (currently root `pom.xml`) and Git inputs. `ReleasePolicy` rejects `-SNAPSHOT` tags.
+- Jenkins source/runtime tests of the `vars/` wrappers, remote tag checks, and approval gates are **not yet implemented or verified**. Neither function should be run from an untrusted pull request or in production until those safeguards and integration tests exist.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
