@@ -16,5 +16,5 @@ def call(Map args = [:]) {
     if (!(result ==~ /sha256:[a-f0-9]{64}/)) {
         error('Registry did not return a valid sha256 manifest digest')
     }
-    return "${args.repository}@${result}"
+    return "${args.repository}@${result}".toString()
 }
