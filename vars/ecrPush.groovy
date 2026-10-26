@@ -65,10 +65,21 @@ fi
 
 DOCKER_CONFIG="$(mktemp -d)"
 export DOCKER_CONFIG
-trap 'rm -rf "$DOCKER_CONFIG"' EXIT HUP INT TERM
+# Avoid a pipeline: POSIX sh does not guarantee pipefail behavior.
+# Restrict access to the one-time authentication token.
+TOKEN_FILE="$DOCKER_CONFIG/ecr-login-token"
+cleanup() {
+    rm -rf -- "$DOCKER_CONFIG"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-aws ecr get-login-password --region "$AWS_REGION" |
-    docker login --username AWS --password-stdin "$ECR_REGISTRY"
+umask 077
+aws ecr get-login-password --region "$AWS_REGION" > "$TOKEN_FILE"
+docker login --username AWS --password-stdin "$ECR_REGISTRY" < "$TOKEN_FILE"
+rm -f -- "$TOKEN_FILE"
 docker push "$ECR_IMAGE"
 '''
         )
