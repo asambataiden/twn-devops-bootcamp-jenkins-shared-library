@@ -57,6 +57,13 @@ Before attempting a real publish, use a disposable test repository with immutabl
 
 The new `EcrPreflightTest` checks preflight script content, not live AWS error responses; these tests require local verification.
 
+### Exact Docker-to-ECR build handoff (added, tests pending)
+
+- `ecrBuild(accountId: '123456789012', region: 'eu-north-1', repository: 'team/app', tag: 'git-abcdef')`: checks root `Dockerfile`, builds directly as the **final fully qualified ECR image reference** and inspects the local image. No implicit retagging, authentication, or publication.
+- Pass the **same coordinates** to `ecrPush(...)`, which revalidates the local image and AWS/ECR preconditions. Prefer tags derived from a trusted immutable source revision; do not infer that a unique tag is enforced solely by syntax validation.
+- After the push, call `ecrImageDigest(...)` and retain the returned `repository@sha256:...` for deployment. These three calls have not been integrated or tested with a real registry. End-to-end provenance and digest matching remain necessary.
+- **Known limitations:** `--pull` alone does not pin base images, and the build currently lacks signed provenance / SBOM verification and explicit build-platform selection. Do not describe it as hermetically reproducible.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
