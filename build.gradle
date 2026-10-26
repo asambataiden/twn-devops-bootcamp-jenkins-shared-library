@@ -1,0 +1,22 @@
+plugins {
+    id 'groovy'
+}
+
+group = 'com.asambataiden.devops'
+version = '0.1.0-SNAPSHOT'
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy:3.0.23'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test { useJUnitPlatform() }
+
+// Jenkins Shared Libraries use src/ rather than Gradle's src/main/groovy.
+sourceSets {
+    main { groovy { srcDirs = ['src'] } }
+    test { groovy { srcDirs = ['test/groovy'] } }
+}
