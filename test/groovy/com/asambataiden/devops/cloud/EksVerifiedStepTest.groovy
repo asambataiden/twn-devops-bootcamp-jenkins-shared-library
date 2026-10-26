@@ -65,4 +65,26 @@ class EksVerifiedStepTest {
             new EksTargetSpec('123456789012', 'eu-north-1', 'unsafe;name')
         })
     }
+    @Test void capturesNamedContainerAndVerifiesObservedDigest() {
+        String body = invoke(inputs()).scripts[0]
+
+        assertTrue(body.contains('container_images()'))
+        assertTrue(body.contains("awk -F '\\t' -v name=\"\$K8S_CONTAINER\""))
+        assertTrue(body.contains('previous_image="$(container_images'))
+        assertTrue(body.contains('observed_image="$(container_images'))
+        assertTrue(body.contains('if [ "$observed_image" != "$K8S_IMAGE" ]'))
+        assertFalse(body.contains('containers[0].image'))
+        assertFalse(body.contains('rollout undo'))
+    }
+
+    @Test void rolloutFailureReportsPreviousImageAndExitsNonzero() {
+        String body = invoke(inputs()).scripts[0]
+
+        assertTrue(body.contains('if ! kubectl'))
+        assertTrue(body.contains('rollout status'))
+        assertTrue(body.contains('previous image for $K8S_CONTAINER: $previous_image'))
+        assertTrue(body.contains('describe deployment "$K8S_DEPLOYMENT" || true'))
+        assertTrue(body.contains('exit 1'))
+    }
+
 }
