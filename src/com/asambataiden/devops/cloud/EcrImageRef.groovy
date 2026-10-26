@@ -19,7 +19,7 @@ final class EcrImageRef implements Serializable {
         if (!(repository ==~ /[a-z][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*/)) {
             throw new IllegalArgumentException('Invalid ECR repository')
         }
-        new DockerImageRef(repository, tag)
+        DockerImageRef validated = new DockerImageRef(repository, tag)
         this.accountId = accountId
         this.region = region
         this.repository = repository
