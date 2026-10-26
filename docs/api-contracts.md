@@ -37,6 +37,12 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 - `dockerInspect(repository: 'team/app', tag: 'git-abc123')`: inspects a **local image ID**, requiring `sha256:` plus 64 lowercase hex characters. This ID is **not** an ECR/registry manifest digest.
 - This initial version assumes Docker CLI availability and a trusted checked-out workspace. No BuildKit cache/pinning strategy, remote registry inspection, or Jenkins-on-agent validation yet.
 
+## Docker Hub publication (source committed, runtime verification pending)
+
+- `dockerPush(repository: 'team/app', tag: 'git-a1b2c3', credentialsId: 'dockerhub-credentials')`: uses Jenkins username/password credentials, environment expansion in a single-quoted shell script, `docker login --password-stdin`, a temporary `DOCKER_CONFIG`, and an EXIT trap to delete that temporary directory. Accepts Docker Hub `namespace/repository` only; AWS ECR authentication will be a separate implementation. A successful push does **not** guarantee immutable tags unless enforced by registry settings.
+- `dockerImageDigest(repository: 'team/app', tag: 'git-a1b2c3')`: queries `docker buildx imagetools inspect` for a manifest digest and returns `repository@sha256:...`. Requires installed Docker buildx and existing registry authentication for private images. **The credentials in `dockerPush` do not persist into a later call.** For private images, a future scoped authentication wrapper or an authenticated ECR-specific implementation is required.
+- Neither step is verified against real Jenkins, Docker Hub, or AWS; mocked Groovy tests are included. Docker Hub token credentials should be scoped to the smallest appropriate permission and repository. Do not echo tokens or enable shell tracing.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
