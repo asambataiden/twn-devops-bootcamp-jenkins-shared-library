@@ -42,7 +42,7 @@ class EcrPreflightTest {
         def run = invokePush(valid())
         assertTrue(run.env.contains('EXPECTED_AWS_ACCOUNT=123456789012'))
         assertTrue(run.script.contains('aws sts get-caller-identity'))
-        assertTrue(run.script.contains('actual_account" != "$EXPECTED_AWS_ACCOUNT"'))
+        assertTrue(run.script.contains('"$actual_account" != "$EXPECTED_AWS_ACCOUNT"'))
         assertTrue(run.script.contains('aws ecr describe-repositories'))
         assertTrue(run.script.contains('"$mutability" != "IMMUTABLE"'))
         assertTrue(run.script.contains('set -eu'))
