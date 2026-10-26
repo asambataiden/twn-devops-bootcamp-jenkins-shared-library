@@ -82,6 +82,14 @@ case " $* " in
   *) exit 2 ;;
 esac
 '''
+        File mktemp = new File(binDir, 'mktemp')
+        mktemp.text = '''#!/bin/sh
+set -eu
+[ "$1" = -d ] || exit 2
+mkdir "$TEST_TEMP_DIR"
+printf '%s\\n' "$TEST_TEMP_DIR"
+'''
+        assertTrue(mktemp.setExecutable(true))
         assertTrue(aws.setExecutable(true))
         assertTrue(kubectl.setExecutable(true))
         String image = 'registry.example/team/app@sha256:' + ('a' * 64)
@@ -99,7 +107,8 @@ esac
             K8S_DEPLOYMENT: 'app',
             K8S_CONTAINER: 'app',
             K8S_IMAGE: image,
-            TMPDIR: directory.toString()
+            TMPDIR: directory.toString(),
+            TEST_TEMP_DIR: directory.resolve('isolated-kubeconfig').toString()
         ])
         def process = new ProcessBuilder('/bin/sh', script.absolutePath)
             .directory(directory.toFile()).redirectErrorStream(true)
@@ -111,7 +120,8 @@ esac
             code: code, output: output,
             calls: calls.exists() ? calls.text : '',
             mutated: directory.resolve('mutated').toFile().exists(),
-            kubeconfigExists: directory.resolve('kubeconfig').toFile().exists()
+            kubeconfigExists: directory.resolve('isolated-kubeconfig/kubeconfig').toFile().exists(),
+            tempDirExists: directory.resolve('isolated-kubeconfig').toFile().exists()
         ]
     }
 
@@ -120,6 +130,8 @@ esac
         assertNotEquals(0, result.code)
         assertFalse(result.mutated)
         assertFalse(result.calls.contains('kubectl'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void wrongClusterPreventsMutation() {
@@ -127,12 +139,16 @@ esac
         assertNotEquals(0, result.code)
         assertFalse(result.mutated)
         assertFalse(result.calls.contains('kubectl'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void missingDeploymentPreventsMutation() {
         def result = execute('missing-deployment')
         assertNotEquals(0, result.code)
         assertFalse(result.mutated)
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void missingNamedContainerPreventsMutation() {
@@ -140,6 +156,8 @@ esac
         assertNotEquals(0, result.code)
         assertFalse(result.mutated)
         assertTrue(result.output.contains('target container not found'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void failedRolloutPreservesPreviousImageEvidence() {
@@ -148,12 +166,16 @@ esac
         assertTrue(result.mutated)
         assertTrue(result.output.contains('previous image for app'))
         assertTrue(result.calls.contains('describe deployment'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void mismatchAfterRolloutFailsVerification() {
         def result = execute('digest-mismatch')
         assertNotEquals(0, result.code)
         assertTrue(result.output.contains('observed Deployment image does not match'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 
     @Test void successfulRolloutVerifiesDigest() {
@@ -161,5 +183,7 @@ esac
         assertEquals(0, result.code, result.output)
         assertTrue(result.mutated)
         assertTrue(result.output.contains('Deployment verified'))
+        assertFalse(result.tempDirExists, 'Temporary kubeconfig directory must be removed')
+        assertFalse(result.kubeconfigExists)
     }
 }
