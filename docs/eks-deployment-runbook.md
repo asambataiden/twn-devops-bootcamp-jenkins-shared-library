@@ -1,5 +1,14 @@
 # EKS digest-based rollout: integration runbook
 
+## Verified EKS-specific entry point (new, unverified in Jenkins)
+
+Prefer `eksDeployVerified(accountId: '123456789012', region: 'eu-north-1', cluster: 'test-cluster', namespace: 'staging', deployment: 'app', container: 'app', image: 'registry/repo@sha256:...')` for controlled EKS use. It verifies AWS account and exact EKS cluster ARN before creating an isolated, temporary kubeconfig, checks Deployment and container existence, updates the digest-pinned image, then waits for rollout status. It has no automatic rollback. Its implementation and mocked tests have been committed but not locally executed yet.
+
+The existing `eksDeploy` is a basic context-based helper, retained for backwards compatibility; it does not independently prove target EKS identity. Do not select it for production-like release flows until additional verification is implemented.
+
+**Security boundary:** Runtime AWS identity still depends on the trusted Jenkins agent or approved short-lived credentials. Jenkins must restrict which jobs may run this step and ensure isolated workspaces/agents. Never accept destination inputs from untrusted PR code. The Kubernetes cluster ARN check authenticates the intended AWS cluster resource; EKS/Kubernetes authorization and workload-level readiness remain separate checks.
+
+
 ## Intent and boundaries
 
 `eksDeploy(context, namespace, deployment, container, image)` updates a **pre-existing** Kubernetes Deployment to an immutable OCI digest reference, then waits up to five minutes for rollout status. Source-code tests are mocked. The step does **not** create a cluster, apply arbitrary manifests, grant RBAC, approve releases, or perform automatic rollback.
