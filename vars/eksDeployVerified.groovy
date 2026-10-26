@@ -73,29 +73,38 @@ aws eks update-kubeconfig \
 kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
     get deployment "$K8S_DEPLOYMENT" >/dev/null
 
-containers="$(kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
-    get deployment "$K8S_DEPLOYMENT" \
-    -o jsonpath='{.spec.template.spec.containers[*].name}')"
-case " $containers " in
-    *" $K8S_CONTAINER "*) ;;
-    *) echo 'ERROR: target container not found in Deployment' >&2; exit 1 ;;
-esac
+# Emit name and image pairs; select the exact named container, not index 0.
+# Tab-delimited output supports sidecars without assuming container order.
+container_images() {
+    kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
+        get deployment "$K8S_DEPLOYMENT" \
+        -o go-template='{{range .spec.template.spec.containers}}{{.name}}{{printf "\\t"}}{{.image}}{{printf "\\n"}}{{end}}'
+}
 
-previous_image="$(kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
-    get deployment "$K8S_DEPLOYMENT" \
-    -o jsonpath='{.spec.template.spec.containers[0].image}')"
-echo "Deployment preflight complete; existing first-container image: $previous_image"
+previous_image="$(container_images | awk -F '\\t' -v name="$K8S_CONTAINER" '$1 == name { print $2 }')"
+if [ -z "$previous_image" ]; then
+    echo 'ERROR: target container not found in Deployment' >&2
+    exit 1
+fi
+echo "Previous image for container $K8S_CONTAINER: $previous_image"
 
 kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
     set image "deployment/$K8S_DEPLOYMENT" "$K8S_CONTAINER=$K8S_IMAGE"
 
 if ! kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
     rollout status "deployment/$K8S_DEPLOYMENT" --timeout=300s; then
-    echo 'ERROR: rollout unsuccessful; review Deployment events and pod logs' >&2
+    echo "ERROR: rollout failed; previous image for $K8S_CONTAINER: $previous_image" >&2
     kubectl --context verified-context --namespace "$K8S_NAMESPACE" \
         describe deployment "$K8S_DEPLOYMENT" || true
     exit 1
 fi
+
+observed_image="$(container_images | awk -F '\\t' -v name="$K8S_CONTAINER" '$1 == name { print $2 }')"
+if [ "$observed_image" != "$K8S_IMAGE" ]; then
+    echo 'ERROR: observed Deployment image does not match requested digest' >&2
+    exit 1
+fi
+echo "Deployment verified: $K8S_DEPLOYMENT / $K8S_CONTAINER -> $observed_image"
 '''
         )
     }
