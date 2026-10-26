@@ -30,6 +30,13 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 - Maven is assumed available on the selected Jenkins agent. Jenkins environment integration has not yet been validated. Multi-module build layouts need additional handling.
 - Both functions have mocked test cases; actual execution and test results are **pending**.
 
+## Docker image foundation (source committed, tests pending)
+
+- `new DockerImageRef(repository, tag)`: checks a restricted image reference format and rejects obvious floating aliases such as `latest`. **Tag validation does not guarantee immutability**; registry-enforced immutable tags and image digest deployment remain separate requirements.
+- `dockerBuild(repository: 'team/app', tag: 'git-abc123')`: checks root `Dockerfile` and executes `docker build --pull` with a fixed root build context; no registry authentication, pushing or deployment.
+- `dockerInspect(repository: 'team/app', tag: 'git-abc123')`: inspects a **local image ID**, requiring `sha256:` plus 64 lowercase hex characters. This ID is **not** an ECR/registry manifest digest.
+- This initial version assumes Docker CLI availability and a trusted checked-out workspace. No BuildKit cache/pinning strategy, remote registry inspection, or Jenkins-on-agent validation yet.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
