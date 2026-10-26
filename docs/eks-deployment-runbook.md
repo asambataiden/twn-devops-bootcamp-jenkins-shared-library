@@ -68,3 +68,13 @@ Execute with Java 25:
 
 Do not infer live AWS/EKS readiness from these simulated tests. Real Jenkins runtime, AWS IAM, kubeconfig isolation and cluster-level rollout behavior require a separate controlled integration run.
 
+
+## Phase 9.4: kubeconfig cleanup regression checks
+
+The executable mocked-shell tests now prepend a controlled fake `mktemp` command so each scenario uses a predictable isolated kubeconfig directory. Tests assert that the temporary directory and kubeconfig are absent after success and after each simulated failure (account/cluster mismatch, missing Deployment/container, rollout failure, digest mismatch).
+
+These checks validate shell exit cleanup for the scenarios exercised; they do not prove cleanup after a forced process kill (SIGKILL), agent termination, machine crash or unexpected external permissions issue. Use ephemeral Jenkins agents and restrict access to job workspaces and temporary files.
+
+### CI status gate
+
+The GitHub Actions workflow is configured to run JDK 21 and 25, but **remote job success is not established by local Gradle output or GitHub commit statuses**. Before merging to `main`, review the actual workflow run and job logs, confirm both matrix jobs succeeded, and configure branch protection using their exact reported check names.
