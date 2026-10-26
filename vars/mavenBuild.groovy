@@ -4,7 +4,7 @@
  */
 def call(Map args = [:]) {
     if (!fileExists('pom.xml')) error('Cannot build Maven project: pom.xml missing')
-    if (args && args.keySet() != ['skipTests'] as Set) {
+    if (!args.keySet().every { it == 'skipTests' }) {
         error('mavenBuild only supports optional skipTests: boolean')
     }
     if (args.containsKey('skipTests') && !(args.skipTests instanceof Boolean)) {
