@@ -43,6 +43,14 @@ This pure calculation never changes `pom.xml`, commits, tags, pushes or deploys.
 - `dockerImageDigest(repository: 'team/app', tag: 'git-a1b2c3')`: queries `docker buildx imagetools inspect` for a manifest digest and returns `repository@sha256:...`. Requires installed Docker buildx and existing registry authentication for private images. **The credentials in `dockerPush` do not persist into a later call.** For private images, a future scoped authentication wrapper or an authenticated ECR-specific implementation is required.
 - Neither step is verified against real Jenkins, Docker Hub, or AWS; mocked Groovy tests are included. Docker Hub token credentials should be scoped to the smallest appropriate permission and repository. Do not echo tokens or enable shell tracing.
 
+## AWS ECR (source committed; agent/runtime tests pending)
+
+- `EcrImageRef(accountId, region, repository, tag)`: validates commercial AWS ECR coordinates and returns an image reference or a checked digest reference. Does not validate account ownership or repository existence.
+- `ecrPush(accountId: '123456789012', region: 'eu-north-1', repository: 'team/app', tag: 'git-abcdef')`: obtains an ECR login token from the Jenkins agent's AWS identity; Docker authentication uses `--password-stdin` and temporary `DOCKER_CONFIG`, cleaned up on exit. **The target full ECR image must already be built/tagged locally**. The step does not create or retag an image.
+- `ecrImageDigest(...)`: executes `aws ecr describe-images` for the target image tag, validates its `sha256` digest and returns a digest-pinned reference. Requires `ecr:DescribeImages` authorization.
+- Scope AWS identity to the desired repository and account, preferably an agent IAM role / short-lived credentials. Additional ECR permissions normally include `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload`, `ecr:PutImage`. AWS account, region, and repository must be the intended deployment destination.
+- The current steps do **not** validate that the Jenkins AWS identity belongs to the supplied account, enforce ECR tag immutability, or automatically build/retag images. Integration checks must cover those controls before use for actual publishing.
+
 ## Remaining planned functions
 
 | Public step | Planned contract |
