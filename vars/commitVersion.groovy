@@ -16,7 +16,7 @@ def call(Map args = [:]) {
     if (!fileExists('pom.xml')) error('pom.xml missing')
     String actualBranch = sh(script: 'git symbolic-ref --quiet --short HEAD', returnStdout: true).trim()
     if (actualBranch != branch) error('Git HEAD must be on main (not detached)')
-    String porcelain = sh(script: 'git status --porcelain --untracked-files=normal', returnStdout: true).replaceFirst(/\\s+$/, '')
+    String porcelain = sh(script: 'git status --porcelain --untracked-files=normal', returnStdout: true).stripTrailing()
     if (!porcelain) error('No version changes to commit')
     // Git porcelain has two fixed-width status columns; do not trim leading spaces.
     // Deliberately fail if unrelated files have changes or were staged earlier.
