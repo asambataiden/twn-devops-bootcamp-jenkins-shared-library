@@ -55,3 +55,16 @@ The verified step now selects the **requested container by name**, rather than a
 
 The previous image currently appears in Jenkins build logs, not a protected artifact or structured recovery record. For recovery, an operator must independently confirm the image and authorize redeployment; pod readiness and externally observed service health remain separate gates. Shell command structure tests do not simulate Kubernetes runtime failures, and no live EKS deployment has been performed.
 
+
+## Phase 9.3: Executable mocked-shell verification
+
+The test suite includes `EksShellIntegrationTest`, which runs the actual deployment shell under `/bin/sh` with temporary fake `aws` and `kubectl` binaries at the front of `PATH`. It covers wrong AWS account, unexpected cluster ARN, missing Deployment, missing named container, rollout failure, digest mismatch and successful rollout. It does **not** contact any cloud service. The tests must run under a POSIX-style host (macOS/Linux CI); Windows is not supported for these shell integration tests.
+
+Execute with Java 25:
+
+```bash
+./gradlew clean test --no-daemon --console=plain
+```
+
+Do not infer live AWS/EKS readiness from these simulated tests. Real Jenkins runtime, AWS IAM, kubeconfig isolation and cluster-level rollout behavior require a separate controlled integration run.
+
