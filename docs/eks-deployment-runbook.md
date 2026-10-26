@@ -48,3 +48,10 @@ Use placeholders deliberately; do not guess a real cluster or namespace.
 - A successful `kubectl rollout status` means Kubernetes considers the rollout complete; it does not prove business-level availability, security posture or successful external traffic.
 - Context naming and image-reference shape are validated but target cluster identity, ECR repository ownership and OCI image trust/provenance are not yet attested.
 - No cluster actions or integration tests have been performed during development of this step.
+
+## Phase 9.2: named-container recovery evidence
+
+The verified step now selects the **requested container by name**, rather than assuming the first container is the application. It captures the previous image reference before mutation, checks rollout completion, and reads the Deployment template afterward to confirm it matches the requested digest. On rollout failure, the step records the previous image and describes the Deployment, then fails. It does **not** automatically roll back or guarantee business-level health.
+
+The previous image currently appears in Jenkins build logs, not a protected artifact or structured recovery record. For recovery, an operator must independently confirm the image and authorize redeployment; pod readiness and externally observed service health remain separate gates. Shell command structure tests do not simulate Kubernetes runtime failures, and no live EKS deployment has been performed.
+
