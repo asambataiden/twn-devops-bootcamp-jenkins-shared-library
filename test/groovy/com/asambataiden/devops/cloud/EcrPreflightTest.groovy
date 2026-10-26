@@ -61,6 +61,21 @@ class EcrPreflightTest {
         assertFalse(script.contains('git push'))
     }
 
+    @Test void awsLoginFailureCannotBeHiddenByPipeExitStatus() {
+        def run = invokePush(valid())
+        String script = run.script
+
+        assertTrue(script.contains('set -eu'))
+        assertTrue(script.contains('umask 077'))
+        assertTrue(script.contains('TOKEN_FILE="$DOCKER_CONFIG/ecr-login-token"'))
+        assertTrue(script.contains('trap cleanup EXIT'))
+        assertTrue(script.contains('aws ecr get-login-password --region "$AWS_REGION" > "$TOKEN_FILE"'))
+        assertTrue(script.contains('docker login --username AWS --password-stdin "$ECR_REGISTRY" < "$TOKEN_FILE"'))
+        assertTrue(script.contains('rm -f -- "$TOKEN_FILE"'))
+        assertFalse(script.contains('get-login-password --region "$AWS_REGION" |'))
+        assertTrue(script.indexOf('get-login-password --region') < script.indexOf('docker login --username AWS'))
+    }
+
     @Test void rejectsUnsafeReferencesBeforeShell() {
         def binding = new Binding([
             error: { String message -> throw new IllegalStateException(message) },
