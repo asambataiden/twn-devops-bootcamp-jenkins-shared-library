@@ -63,3 +63,15 @@ Unit tests must cover:
 - Remote execution timeout
 - Remote execution failure
 - Successful deployment
+
+## Current implementation scope
+
+- Remote deployment directory: `/opt/capstone03`.
+- Application deployment uses Docker Compose.
+- The Jenkins Shared Library wrapper returns the SSM command ID only
+  after successful remote execution.
+- SSM parameters have a conservative project-level limit of 16 KiB.
+- The deployment implementation is currently specific to Capstone 03.
+- General-purpose remote directory configuration, concurrent deployment
+  protection, and interruption recovery are future hardening tasks.
+- Offline mocks do not substitute for live IAM and SSM verification.

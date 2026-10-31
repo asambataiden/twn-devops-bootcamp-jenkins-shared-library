@@ -18,3 +18,8 @@ build/
 *.pem
 *.key
 credentials.*
+
+# Python test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
