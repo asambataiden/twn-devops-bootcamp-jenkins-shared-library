@@ -40,9 +40,22 @@ class EcrBuildStepTest {
         assertEquals(fullImage, run.image)
         assertTrue(run.environment.contains('ECR_IMAGE=' + fullImage))
         assertEquals(1, run.commands.size())
-        assertTrue(run.commands[0].contains('docker build --pull --file Dockerfile --tag "$ECR_IMAGE" .'))
+
+        // Verify default configuration remains backward compatible.
+        assertTrue(run.environment.contains('BUILD_DOCKERFILE=Dockerfile'))
+        assertTrue(run.environment.contains('BUILD_CONTEXT=.'))
+        assertTrue(run.environment.contains('BUILD_PLATFORM='))
+
+        // Verify the Docker build command uses the configured values.
+        assertTrue(run.commands[0].contains('docker build'))
+        assertTrue(run.commands[0].contains('--file "$BUILD_DOCKERFILE"'))
+        assertTrue(run.commands[0].contains('--tag "$ECR_IMAGE"'))
+        assertTrue(run.commands[0].contains('"$BUILD_CONTEXT"'))
+
+        // Verify the image is inspected, not published.
         assertTrue(run.commands[0].contains('docker image inspect "$ECR_IMAGE"'))
         assertFalse(run.commands[0].contains('docker push'))
+
     }
 
     @Test void missingDockerfileFailsWithoutShellInvocation() {
