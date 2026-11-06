@@ -1,6 +1,6 @@
 # TWN DevOps Bootcamp — Jenkins Shared Library
 
-**Status:** v0.1.0 foundation scaffold; no Jenkins integration has been executed.
+**Branch status:** `main` contains the v0.1.0 foundation scaffold. The separately maintained [`feat/capstone03-ecr-ssm-integration`](https://github.com/asambataiden/twn-devops-bootcamp-jenkins-shared-library/tree/feat/capstone03-ecr-ssm-integration) branch contains implemented Maven, Docker, ECR, EKS and SSM pipeline steps; it was used at pinned revision `c514371` in the verified Capstone 03 Jenkins release workflow. Do not assume those APIs are available on `main`.
 
 Reusable CI/CD building blocks for the six TechWorld with Nana Capstones. Original training repositories remain intact. This new library will evolve incrementally with tests and reviewed changes.
 
@@ -11,7 +11,7 @@ Reusable CI/CD building blocks for the six TechWorld with Nana Capstones. Origin
 - `incrementVersion(Map)`: Jenkins global step that calculates a new version; **does not change files or push to Git**.
 - Gradle-based unit test scaffolding.
 
-All other APIs are **planned**, not implemented. Refer to `docs/roadmap.md` and `docs/api-contracts.md`.
+**Scope:** The following describes the `main` foundation branch only. Additional APIs exist on the integration feature branch; review that branch's source and the capstone-specific evidence before making implementation or validation claims. See `docs/roadmap.md` and `docs/api-contracts.md` for the foundation plan.
 
 ## Quick start
 
@@ -52,10 +52,16 @@ Replace `<approved-commit-or-tag>` with a real reviewed revision after configuri
 - Verify Jenkins CPS and sandbox behavior with integration tests before releasing.
 - Prefer immutable image digests and approved library tags.
 
+## Public portfolio and tested integration
+
+- [Dedicated DevOps Capstone Portfolio](https://github.com/asambataiden/twn-devops-capstone-portfolio)
+- [Capstone 03 implementation and verification](https://github.com/asambataiden/twn-capstone-03-complete-cicd-terraform/blob/main/README.md)
+- [Pinned integration revision `c514371`](https://github.com/asambataiden/twn-devops-bootcamp-jenkins-shared-library/tree/c5143712fd0e762cf3c9e19114c894dfae214efe)
+
 ## Existing references
 
 - [Earlier Shared Library](https://github.com/asambataiden/jenkins-shared-library)
 - [Module 12 Shared Library](https://github.com/asambataiden/twn-devops-bootcamp-12-terraform-jenkins-shared-library)
-- [Bootcamp portfolio](https://github.com/asambataiden/twn-devops-bootcamp-portfolio)
+- Historical bootcamp module portfolio (private; not a reviewer-accessible link)
 
 See `docs/architecture.md`, `docs/roadmap.md`, and `docs/api-contracts.md`.
